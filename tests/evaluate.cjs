@@ -1,0 +1,20 @@
+'use strict';
+const fs=require('node:fs');
+const path=require('node:path');
+const engine=require('../engine');
+const samples=require('./evaluation.json');
+const labels=Object.keys(engine.levels);
+const matrix=Object.fromEntries(labels.map(label=>[label,Object.fromEntries(labels.map(other=>[other,0]))]));
+const results=samples.map(sample=>{
+  const report=engine.analyze(sample);matrix[sample.expected][report.level]++;
+  const dimensionsMatch=(!sample.applicability||sample.applicability===report.assessment.applicability)&&(!sample.information||sample.information===report.assessment.information);
+  return {id:sample.id,category:sample.category,expected:sample.expected,actual:report.level,passed:sample.expected===report.level&&dimensionsMatch,assessment:report.assessment,evidence:report.evidence.map(e=>e.id)};
+});
+const correct=results.filter(r=>r.passed).length;
+const normal=results.filter(r=>r.expected==='low');
+const output={engineVersion:engine.VERSION,evaluatedAt:new Date().toISOString(),sampleCount:samples.length,correct,agreement:correct/samples.length,normalHighRiskFalsePositive:normal.length?normal.filter(r=>r.actual==='high').length/normal.length:null,matrix,results,note:'自建人工标注回归集，标签用于工程验收，未独立验证；一致率不是现实诈骗识别准确率。'};
+const out=path.resolve(__dirname,'../test-results');fs.mkdirSync(out,{recursive:true});fs.writeFileSync(path.join(out,'evaluation.json'),JSON.stringify(output,null,2));
+console.table(results.map(({id,expected,actual,passed})=>({id,expected,actual,passed})));
+console.log(`${correct}/${samples.length} labels matched. Output: test-results/evaluation.json`);
+console.log(output.note);
+if(correct!==samples.length)process.exitCode=1;

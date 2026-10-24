@@ -1,0 +1,13 @@
+{
+  "name": "credilens",
+  "version": "1.1.5",
+  "private": true,
+  "description": "校园反诈识别助手",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/engine.test.js tests/server.test.js tests/transcription.test.js tests/search.test.js",
+    "evaluate": "node tests/evaluate.cjs",
+    "test:browser": "node tests/browser.cjs && node tests/links-browser.cjs"
+  },
+  "engines": { "node": ">=22.13.0" }
+}

@@ -1,0 +1,1 @@
+date,tester_id,environment,task_id,input_type,expected_level,actual_level,evidence_correct,actions_useful,understood_source_unverified,misunderstood_as_confirmed_fraud,duration_seconds,model_status,model_request_id,model_duration_ms,failure_reason,feedback_priority,repro_steps

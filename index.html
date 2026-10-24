@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#117b6e">
+  <meta name="description" content="CrediLens 校园反诈识别助手，分析可疑内容、核对证据并记录处置。">
+  <title>CrediLens · 校园反诈识别助手</title>
+  <link rel="icon" href="assets/brand.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="assets/icons.js" defer></script>
+  <script src="knowledge.js" defer></script>
+  <script src="engine.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳至主要内容</a>
+  <header class="topbar">
+    <a class="brand" href="#workbench" aria-label="CrediLens 工作台"><img src="assets/brand.svg" width="34" height="38" alt=""><span>CrediLens<small>校园反诈识别助手</small></span><span class="version">1.1.5</span></a>
+    <div class="top-actions"><span class="engine-status" id="engineStatus"><span class="status-dot"></span>本地分析</span><button class="icon-btn" id="settingsBtn" title="分析与隐私设置" aria-label="分析与隐私设置"><i data-lucide="settings-2"></i></button></div>
+  </header>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <nav aria-label="主导航">
+        <a class="nav-link active" href="#workbench" data-view="workbench"><i data-lucide="scan-line"></i><span>风险工作台</span></a>
+        <a class="nav-link" href="#cases" data-view="cases"><i data-lucide="layers"></i><span>案例样本</span><span class="nav-count" id="caseCount"></span></a>
+        <a class="nav-link" href="#knowledge" data-view="knowledge"><i data-lucide="book-open"></i><span>安全知识</span></a>
+        <a class="nav-link" href="#history" data-view="history"><i data-lucide="history"></i><span>本次记录</span><span class="nav-count" id="historyCount">0</span></a>
+      </nav>
+      <div class="sidebar-bottom"><i data-lucide="shield-check"></i><span>先核验，再行动<small id="sidebarPrivacy">内容仅在本机处理</small></span></div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <section id="view-workbench" class="view">
+        <div class="page-heading"><div><p class="eyebrow">CAMPUS SECURITY</p><h1>风险分析工作台</h1></div><button class="text-btn" id="resetBtn"><i data-lucide="rotate-ccw"></i>新建分析</button></div>
+        <div class="workspace">
+          <section class="input-column" aria-labelledby="inputTitle">
+            <div class="section-heading"><h2 id="inputTitle"><span class="step-number">01</span>提交可疑内容</h2><span class="subtle-label"><i data-lucide="lock-keyhole"></i><span id="inputProcessingMode">本地处理</span></span></div>
+            <div class="tabs" role="tablist" aria-label="输入类型">
+              <button id="tab-text" class="tab active" role="tab" aria-selected="true" aria-controls="panel-text" data-mode="text"><i data-lucide="message-square-text"></i>聊天文本</button>
+              <button id="tab-link" class="tab" role="tab" aria-selected="false" aria-controls="panel-link" tabindex="-1" data-mode="link"><i data-lucide="link"></i>可疑链接</button>
+              <button id="tab-image" class="tab" role="tab" aria-selected="false" aria-controls="panel-image" tabindex="-1" data-mode="image"><i data-lucide="image"></i>截图</button>
+            </div>
+            <form id="analysisForm" novalidate>
+              <div id="panel-text" role="tabpanel" aria-labelledby="tab-text">
+                <label for="message">聊天记录或通知内容</label><textarea id="message" maxlength="8000" placeholder="粘贴可疑消息，保留对方要求你做什么的完整上下文。"></textarea>
+                <div class="field-meta"><span>请先移除姓名、学号等个人信息</span><span id="charCount">0 / 8,000</span></div>
+              </div>
+              <div id="panel-link" role="tabpanel" aria-labelledby="tab-link" hidden>
+                <label for="linkInput">待核验链接</label><input type="text" id="linkInput" maxlength="2048" inputmode="url" placeholder="example.com/path 或 https://example.com" autocomplete="off" spellcheck="false">
+                <p class="field-meta">支持短信中的裸域名；协议未写明时不会推断 HTTPS。检查链接结构与消息要求，不打开目标网页。</p>
+                <label for="linkContext">链接所在消息的原文 <span class="optional">选填</span></label><textarea id="linkContext" maxlength="5000" placeholder="粘贴对方发来链接时的原话。"></textarea>
+                <label class="checkbox-row"><input type="checkbox" id="searchConsent" disabled aria-describedby="searchStatus">本次允许向 Tavily 发送域名，检索公开出处（可能收费）</label>
+                <p class="field-meta" id="searchStatus" role="status">Tavily 检索未配置；授权开关暂不可用，结构分析仍可使用。</p>
+              </div>
+              <div id="panel-image" role="tabpanel" aria-labelledby="tab-image" hidden>
+                <label class="upload-zone" id="uploadZone" for="imageFile"><i data-lucide="image-up"></i><strong>选择或拖入截图</strong><span>PNG、JPG、WebP · 最大 3 MB</span><input class="visually-hidden" id="imageFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
+                <div id="imagePreviewWrap" class="image-preview" hidden><img id="imagePreview" alt="待分析截图预览"><button type="button" class="icon-btn image-zoom" id="zoomImageBtn" aria-label="查看截图大图" title="查看截图大图"><i data-lucide="maximize-2"></i></button><button type="button" class="icon-btn" id="removeImageBtn" aria-label="移除截图" title="移除截图"><i data-lucide="x"></i></button></div>
+                <label class="checkbox-row" id="imageConsentRow" hidden><input type="checkbox" id="imageConsent">我已遮盖截图中的个人信息，同意发送此图进行云端识别</label>
+                <div class="image-recognition" id="imageRecognition" hidden><button type="button" class="text-btn" id="recognizeBtn"><i data-lucide="scan-text"></i><span id="recognizeLabel">识别图片文字</span></button></div>
+                <p id="imageRecognitionStatus" class="image-status" role="status">尚未识别，可手动填写截图文字。</p>
+                <label for="imageNote">截图文字</label><textarea id="imageNote" maxlength="8000" aria-describedby="imageRecognitionStatus" placeholder="填写截图原文，或在云端识别后对照图片修改文字。"></textarea>
+                <div class="field-meta"><span id="imageTextCount">0 / 8,000</span></div>
+                <label class="checkbox-row"><input type="checkbox" id="imageTextConfirmed">我已对照原图检查文字，包括否定词、金额及操作要求</label>
+              </div>
+              <div class="background-field"><label for="background">补充背景与核验目标 <span class="optional">选填</span></label><textarea id="background" maxlength="1000" placeholder="例如：对方自称学校老师，我还没付款，想核实这个收费要求。"></textarea><div class="field-meta"><span>只描述经过，不填写密码、验证码或账号</span><span id="backgroundCount">0 / 1,000</span></div></div>
+              <p class="field-error" id="inputError" role="alert" hidden></p>
+              <div class="privacy-line"><i data-lucide="scan-face"></i><span id="privacyText">手机号、邮箱和常见账号字段将自动遮盖</span></div>
+              <div class="analyze-actions"><button type="submit" class="primary-btn" id="analyzeBtn"><i data-lucide="scan-line"></i><span>分析风险</span><i data-lucide="arrow-right"></i></button><button type="button" class="text-btn" id="cancelBtn" hidden>取消</button></div>
+            </form>
+            <div class="quick-samples"><div class="section-heading"><h3>试用样例</h3><a href="#cases" class="inline-link">查看全部<i data-lucide="arrow-up-right"></i></a></div><div id="quickSamples" class="sample-list"></div></div>
+            <div class="input-notice"><i data-lucide="info"></i><p>结果仅作辅助初筛。无法确认身份或来源时，请通过已知官方渠道核验。</p></div>
+          </section>
+          <section class="result-column" aria-labelledby="resultTitle" aria-busy="false" id="resultPanel">
+            <div class="section-heading result-heading"><h2 id="resultTitle"><span class="step-number">02</span>分析报告</h2><span id="resultTime" class="subtle-label">尚未提交</span></div>
+            <div id="emptyState" class="empty-state"><img src="assets/brand.svg" width="80" height="90" alt=""><h3>等待分析内容</h3><p>风险结论 · 原文证据 · 核验与处置</p><div class="empty-grid"><span><i data-lucide="text-search"></i>检查原文</span><span><i data-lucide="link"></i>解析链接</span><span><i data-lucide="list-checks"></i>核验行动</span></div></div>
+            <div id="loadingState" class="loading-state" role="status" hidden><span class="spinner"></span><h3 id="loadingLabel">正在提取风险信号</h3><p id="loadingDescription">核对输入中的具体证据</p></div>
+            <article id="resultContent" hidden>
+              <div id="fallbackNotice" class="notice" hidden></div>
+              <div class="risk-summary" id="riskSummary" role="status" aria-live="polite" aria-atomic="true"><div class="risk-score" id="riskScorePanel"><strong id="riskScore"></strong><small id="scoreCaption">规则风险分</small></div><div class="risk-copy"><span class="risk-label" id="riskLabel"></span><h3 id="riskTitle"></h3><p id="riskDescription"></p></div></div>
+              <div class="report-meta"><span id="analysisSource"></span><span id="contentType"></span><span id="evidenceCount"></span></div>
+              <p class="processing-status" id="processingStatus"></p><dl class="assessment-details" id="assessmentDetails"></dl>
+              <section id="verificationSection" class="verification-section" hidden><h3 class="report-heading">核验回应</h3><p id="verificationAnswer"></p><ul id="backgroundAdvice"></ul></section>
+              <section id="backgroundSection" class="background-section" hidden><h3 class="report-heading">用户补充 <span>自述，未核实</span></h3><pre id="backgroundText"></pre></section>
+              <div class="report-toolbar"><div class="segmented" aria-label="报告内容"><button type="button" class="active" data-report-tab="evidence" aria-pressed="true">原文依据</button><button type="button" data-report-tab="original" aria-pressed="false">脱敏原文</button></div><div class="export-actions"><button class="icon-btn" id="copyBtn" aria-label="复制脱敏报告" title="复制脱敏报告"><i data-lucide="copy"></i></button><button class="icon-btn" id="exportBtn" aria-label="下载 Markdown 报告" title="下载 Markdown 报告"><i data-lucide="download"></i></button><button class="icon-btn" id="jsonBtn" aria-label="下载 JSON 报告" title="下载 JSON 报告"><i data-lucide="file-json"></i></button></div></div>
+              <div id="evidenceList" class="evidence-list"></div><div id="originalPanel" class="original-panel" hidden><p class="subtle-label">已遮盖常见敏感字段 · 点击证据可定位</p><pre id="originalText"></pre></div>
+              <section id="urlSection" hidden><h3 class="report-heading">链接结构</h3><dl id="urlDetails" class="url-details"></dl><p class="link-note" id="urlStructureSummary"></p><details class="link-check-details" id="urlCheckDetails"><summary>结构检查明细（6 项）</summary><ul id="urlChecks" class="link-checks"></ul></details><h3 class="report-heading">消息用途与风险</h3><p class="link-note" id="urlContext"></p><h3 class="report-heading">归属检索 <span>不是官网或安全认证</span></h3><p class="link-note" id="attributionStatus" role="status"></p><p class="link-note" id="attributionTime" hidden></p><ul id="attributionSources" class="attribution-sources"></ul><h3 class="report-heading">页面检查</h3><p class="link-note" id="urlPageStatus"></p></section>
+              <section id="missingSection" hidden><h3 class="report-heading">需补充的信息</h3><ul class="missing-information" id="missingInformation"></ul></section>
+              <h3 class="report-heading" id="actionsHeading">建议动作 <span id="actionProgress"></span></h3><div id="actionList" class="action-list"></div>
+              <div class="uncertainty"><i data-lucide="circle-help"></i><p id="uncertaintyText"></p></div>
+              <h3 class="report-heading" id="referencesHeading">相关安全知识</h3><div id="referenceList" class="reference-list"></div>
+              <section class="quiz-section" id="quizSection"><h3 class="report-heading">判断练习</h3><p id="quizQuestion"></p><div id="quizOptions" class="quiz-options"></div><p id="quizFeedback" role="status" hidden></p></section>
+              <p class="report-footnote">分数是启发式风险指标，并非诈骗概率。未访问链接目标，未核验发件人真实身份。</p>
+            </article>
+          </section>
+        </div>
+      </section>
+      <section id="view-cases" class="view" hidden><div class="page-heading"><div><p class="eyebrow">CASE LIBRARY</p><h1>校园案例样本</h1></div><span class="subtle-label">虚构、脱敏教学样本</span></div><div class="filter-bar"><label class="search-field"><i data-lucide="search"></i><input id="caseSearch" type="search" placeholder="搜索场景或内容" aria-label="搜索案例"></label><select id="caseFilter" aria-label="筛选样本类型"><option value="all">全部类型</option><option value="high">高风险</option><option value="medium">中风险</option><option value="low">低风险</option><option value="unknown">待核验</option></select></div><div id="caseList" class="case-grid"></div></section>
+      <section id="view-knowledge" class="view" hidden><div class="page-heading"><div><p class="eyebrow">SECURITY KNOWLEDGE</p><h1>安全知识</h1></div><span class="subtle-label">项目整理 · 来源可查</span></div><label class="search-field knowledge-search"><i data-lucide="search"></i><input type="search" id="knowledgeSearch" placeholder="搜索风险、核验方式或来源" aria-label="搜索安全知识"></label><div id="knowledgeList" class="knowledge-list"></div></section>
+      <section id="view-history" class="view" hidden><div class="page-heading"><div><p class="eyebrow">SESSION RECORDS</p><h1>本次分析记录</h1></div><button class="text-btn danger-text" id="clearHistoryBtn"><i data-lucide="trash-2"></i>清空记录</button></div><p class="session-note">仅保留本次页面会话中的脱敏报告，最多 20 条。刷新或关闭页面后清空。</p><div id="historyList" class="history-list"></div></section>
+      <footer><span>CrediLens · 校园安全实践项目</span><span id="footerMode">本地处理 · 无内容上传</span></footer>
+    </main>
+  </div>
+  <dialog id="startupDialog" aria-labelledby="startupTitle" aria-describedby="startupPrivacy"><div class="dialog-heading"><h2 id="startupTitle">选择分析方式</h2><button type="button" class="icon-btn" id="closeStartupBtn" aria-label="以本地模式进入" title="以本地模式进入"><i data-lucide="x"></i></button></div><form id="startupForm"><fieldset class="startup-modes"><legend class="visually-hidden">分析方式</legend><label class="startup-mode"><input type="radio" name="startupMode" value="local" id="startupLocal" checked autofocus><span><strong><i data-lucide="monitor"></i>本地分析</strong><small>规则与知识检索；输入内容不上传。图片需手动填写文字。</small></span></label><label class="startup-mode"><input type="radio" name="startupMode" value="cloud" id="startupCloud" disabled><span><strong><i data-lucide="cloud"></i>云端分析</strong><small>脱敏原文及补充背景发送至模型服务，可能产生费用。图片需另行授权。</small></span></label></fieldset><p id="startupStatus" class="settings-status" role="status">正在检查云端服务，本地分析可立即使用。</p><p id="startupPrivacy" class="startup-privacy">自动脱敏不能覆盖全部个人信息。两种方式均仅作辅助初筛，不能核实消息真假。</p><button type="submit" class="primary-btn" id="startWorkbenchBtn">进入工作台<i data-lucide="arrow-right"></i></button></form></dialog>
+  <dialog id="settingsDialog" aria-labelledby="settingsTitle"><div class="dialog-heading"><h2 id="settingsTitle">分析与隐私</h2><button class="icon-btn" id="closeSettingsBtn" aria-label="关闭设置" title="关闭"><i data-lucide="x"></i></button></div><label for="analysisMode">分析方式</label><select id="analysisMode"><option value="local">本地规则与知识检索</option><option value="cloud" id="cloudOption" disabled>云端模型（未配置）</option></select><p class="settings-status" id="serverStatus">本地模式不发送输入内容。</p><p>云端模式会将脱敏文字发送到配置的模型服务。截图需单独勾选授权，图片中的个人信息请手动遮盖。</p><dl class="settings-facts"><dt>本地分析</dt><dd>规则匹配、URL 结构解析、关键词知识检索</dd><dt>记录与导出</dt><dd>仅保存脱敏结果；不持久保存截图</dd><dt>识别边界</dt><dd>自动脱敏无法覆盖全部姓名、地址或学号，请在提交前检查</dd></dl><button class="primary-btn" id="saveSettingsBtn">完成</button></dialog>
+  <dialog id="imageDialog" aria-labelledby="imageDialogTitle"><div class="dialog-heading"><h2 id="imageDialogTitle">截图复核</h2><div class="image-dialog-actions"><button type="button" class="icon-btn" id="imageSizeBtn" aria-pressed="false" aria-label="按实际像素查看" title="按实际像素查看"><i data-lucide="zoom-in"></i></button><button type="button" class="icon-btn" id="closeImageDialogBtn" aria-label="关闭截图大图" title="关闭"><i data-lucide="x"></i></button></div></div><div class="image-detail" id="imageDetailViewport" tabindex="0" aria-label="截图查看区域"><img id="imageDetail" alt="待复核的截图大图"></div></dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>

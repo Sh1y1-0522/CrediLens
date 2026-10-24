@@ -1,0 +1,23 @@
+[Unit]
+Description=CrediLens staging service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=credilens
+Group=credilens
+WorkingDirectory=/opt/credilens
+EnvironmentFile=/etc/credilens/credilens.env
+ExecStart=/usr/bin/node /opt/credilens/server.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/credilens
+RestrictAddressFamilies=AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target
